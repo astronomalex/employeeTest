@@ -1,0 +1,66 @@
+<div class="modal-dialog">
+  <div class="modal-content" *ngIf="!!editModel">
+    <div class="modal-header">
+      <h5 class="modal-title" id="exampleModalLabel">{{title}}</h5>
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="modal"
+        aria-label="Close"
+      ></button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="employeeEditForm">
+        <select formControlName="departmentId" class="form-select">
+          <option
+            *ngFor="let dep of departments"
+            value="{{ dep.departmentId }}"
+            [selected]="dep.departmentId == editModel.departmentId">
+            {{dep.departmentName}}
+          </option>
+        </select>
+
+        <label for="lastName" class="form-label">Фамилия</label>
+        <input
+          class="form-control"
+          id="lastName"
+          type="text"
+          formControlName="lastName">
+
+        <label for="firstName" class="form-label">Имя</label>
+        <input
+          class="form-control"
+          id="firstName"
+          type="text" formControlName="firstName">
+
+        <label for="fathersName" class="form-label">Отчество</label>
+        <input
+          class="form-control"
+          id="fathersName"
+          type="text" formControlName="fathersName">
+
+        <label for="docDateOfBirth" class="form-label">День рождения</label>
+        <input type="date" id="docDateOfBirth" formControlName="dateOfBirth" class="form-control">
+
+        <label for="docDateOfEmployment" class="form-label">Дата устройства</label>
+        <input type="date" id="docDateOfEmployment" formControlName="dateOfEmployment" class="form-control">
+
+        <label for="salary" class="form-label">Зарплата</label>
+        <input
+          class="form-control"
+          id="salary"
+          type="number" formControlName="salary">
+
+      </form>
+
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        Close
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="!employeeEditForm.valid" (click)="saveSomeThing()">
+        Save changes
+      </button>
+    </div>
+  </div>
+</div>

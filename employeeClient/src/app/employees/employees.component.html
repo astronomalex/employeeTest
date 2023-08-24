@@ -1,0 +1,135 @@
+<div class="container">
+  <div class="card-table">
+    <div class="cart-product">
+      <table class="table table-responsive">
+        <thead>
+        <tr>
+          <th>
+            <div (click)="changeSortColumn('Department')" style="cursor: pointer">
+              Отдел
+              <div *ngIf="filters.sortColumnName == 'Department' && filters.ascDirection" class="btn btn-link">
+                <i class="fa fa-arrow-down"></i></div>
+              <div *ngIf="filters.sortColumnName == 'Department' && !filters.ascDirection" class="btn btn-link">
+                <i class="fa fa-arrow-up"></i></div>
+            </div>
+            <input
+              (ngModelChange)="onFiltersChanged()"
+              [(ngModel)]="filters.departmentName"
+              class="form-control"
+              id="departmentStr"
+              type="text">
+          </th>
+          <th>
+            <div (click)="changeSortColumn('FullName')" style="cursor: pointer">
+              Ф.И.О.
+              <div *ngIf="filters.sortColumnName == 'FullName' && filters.ascDirection" class="btn btn-link">
+                <i class="fa fa-arrow-down"></i></div>
+              <div *ngIf="filters.sortColumnName == 'FullName' && !filters.ascDirection" class="btn btn-link">
+                <i class="fa fa-arrow-up"></i></div>
+
+            </div>
+            <input
+              (ngModelChange)="onFiltersChanged()"
+              [(ngModel)]="filters.employeeFullName"
+              class="form-control"
+              id="lastName"
+              type="text">
+          </th>
+          <th>
+            <div (click)="changeSortColumn('DateOfBirth')" style="cursor: pointer">
+              День рождения
+              <div *ngIf="filters.sortColumnName == 'DateOfBirth' && filters.ascDirection" class="btn btn-link">
+                <i class="fa fa-arrow-down"></i></div>
+              <div *ngIf="filters.sortColumnName == 'DateOfBirth' && !filters.ascDirection" class="btn btn-link">
+                <i class="fa fa-arrow-up"></i></div>
+
+            </div>
+            <input (ngModelChange)="onFiltersChanged()" [(ngModel)]="filters.dateOfBirth" class="form-control" id="docDateOfBirthFilter"
+                   type="date">
+          </th>
+          <th>
+            <div (click)="changeSortColumn('DateOfEmployment')" style="cursor: pointer">
+              День устройства
+              <div *ngIf="filters.sortColumnName == 'DateOfEmployment' && filters.ascDirection" class="btn btn-link">
+                <i class="fa fa-arrow-down"></i></div>
+              <div *ngIf="filters.sortColumnName == 'DateOfEmployment' && !filters.ascDirection" class="btn btn-link">
+                <i class="fa fa-arrow-up"></i></div>
+
+            </div>
+            <input (ngModelChange)="onFiltersChanged()" [(ngModel)]="filters.dateOfEmployment" class="form-control"
+                   id="docDateOfEmploymentFilter" type="date">
+          </th>
+          <th>
+            <div (click)="changeSortColumn('Salary')" style="cursor: pointer">
+              Зарплата
+              <div *ngIf="filters.sortColumnName == 'Salary' && filters.ascDirection" class="btn btn-link">
+                <i class="fa fa-arrow-down"></i></div>
+              <div *ngIf="filters.sortColumnName == 'Salary' && !filters.ascDirection" class="btn btn-link">
+                <i class="fa fa-arrow-up"></i></div>
+
+            </div>
+            <input
+              (ngModelChange)="onFiltersChanged()"
+              [(ngModel)]="filters.salarySearchStr"
+              class="form-control"
+              id="salaryFilter"
+              type="text">
+          </th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let item of items; let i = index">
+          <td style="width: 12%;">
+            {{ item.departmentName}}
+          </td>
+          <td style="width: max-content">
+            {{ item.fullName}}
+          </td>
+          <td style="width: 17%;">
+            {{item.dateOfBirth | date }}
+          </td>
+          <td style="width: 17%;">
+            {{item.dateOfEmployment | date }}
+          </td>
+          <td style="width: 12%;">
+            {{item.salary | currency: "RUB"}}
+          </td>
+          <td style="width: 100px;">
+
+            <button (click)="editEmployee(item.employeeId)" class="btn btn-outline-secondary btn-sm"
+                    title="Редактировать сотрудника" type="button">
+              <i aria-hidden="true" class="fa fa-pencil"></i></button>
+
+            <button (click)="deleteEmployee(item.employeeId)" class="btn btn-outline-danger btn-sm"
+                    style="margin-left: 1em"
+                    title="Удалить" type="button"><i aria-hidden="true"
+                                                     class="fa fa-trash"></i>
+            </button>
+
+          </td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div (click)="editEmployee(0)" class="w-100 btn btn-outline-light" type="button"><i
+              aria-hidden="true" class="fa fa-plus"></i></div>
+          </td>
+
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<div
+  aria-hidden="true"
+  aria-labelledby="exampleModalLabel"
+  class="modal fade"
+  id="employeeEdit"
+  tabindex="-1"
+>
+  <app-employees-edit (close)="onEditClose()" [departments]="departments"
+                      [employeeId$]="selectedEmployeeId"></app-employees-edit>
+</div>
