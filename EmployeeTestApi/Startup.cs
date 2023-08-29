@@ -12,8 +12,10 @@ using System.Threading.Tasks;
 using EmployeeTestApi.Data;
 using EmployeeTestApi.Data.Repositories.Implementations;
 using EmployeeTestApi.Data.Repositories.Interfaces;
+using EmployeeTestApi.Helpers;
 using EmployeeTestApi.Services.Implementations;
 using EmployeeTestApi.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeTestApi
 {
@@ -31,7 +33,9 @@ namespace EmployeeTestApi
         {
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             services.AddScoped<IEmployeeService, EmployeeService>();
-            services.AddSingleton<DapperContext>();
+            services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
+            services.AddDbContext<EfContext>(options =>
+                options.UseSqlServer(_config.GetConnectionString("developConnection")));
             services.AddCors();
             services.AddControllers();
         }
@@ -54,6 +58,7 @@ namespace EmployeeTestApi
             {
                 endpoints.MapControllers();
             });
+            
         }
     }
 }

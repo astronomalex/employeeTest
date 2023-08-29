@@ -1,45 +1,89 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
-using EmployeeTestApi.Data.Constants;
-using EmployeeTestApi.Data.Dtos;
 using EmployeeTestApi.Data.Models;
 using EmployeeTestApi.Data.Repositories.Interfaces;
-using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace EmployeeTestApi.Data.Repositories.Implementations
 {
     public class EmployeeRepository: IEmployeeRepository
     {
-        private readonly DapperContext _context;
+        private readonly EfContext _efContext;
 
-        public EmployeeRepository(DapperContext context)
+        public EmployeeRepository(EfContext efContext)
         {
-            _context = context;
+            _efContext = efContext;
         }
-        public async Task<IEnumerable<EmployeeListItemDto>> GetList(EmployeesFilterModel filters)
+        public async Task<IEnumerable<EmployeeRm>> GetList(EmployeesFilterModel filters)
         {
             try
             {
-                using (var connection = _context.CreateConnection())
+                var result = _efContext.Employee
+                    .Include(e => e.Department)
+                    .Where(e => filters.DepartmentName.IsNullOrEmpty() ||
+                                e.Department.DepartmentName.Contains(filters.DepartmentName))
+                    .Where(e => filters.EmployeeFullName.IsNullOrEmpty() ||
+                                (e.FirstName.Contains(filters.EmployeeFullName) ||
+                                 e.LastName.Contains(filters.EmployeeFullName) ||
+                                 e.FathersName.Contains(filters.EmployeeFullName)))
+                    .Where(e => filters.SalarySearchStr.IsNullOrEmpty() ||
+                                e.Salary.ToString().Contains(filters.SalarySearchStr))
+                    .Where(e => filters.DateOfBirth.IsNullOrEmpty() ||
+                                e.DateOfBirth == DateTime.Parse(filters.DateOfBirth))
+                    .Where(e => filters.DateOfEmployment.IsNullOrEmpty() ||
+                                e.DateOfBirth == DateTime.Parse(filters.DateOfEmployment));
+
+                if (filters.AscDirection)
                 {
-                    var parameters = new DynamicParameters();
-                    parameters.Add("@DepartmentFilter", filters.DepartmentName, DbType.String);
-                    parameters.Add("@FullNameFilter", filters.EmployeeFullName, DbType.String);
-                    parameters.Add("@DateOfBirthFilter", filters.DateOfBirth, DbType.DateTime);
-                    parameters.Add("@DateOfEmplFilter", filters.DateOfEmployment, DbType.DateTime);
-                    parameters.Add("@SalaryFilter", filters.SalarySearchStr, DbType.String);
-                    parameters.Add("@ColumnSort", filters.SortColumnName, DbType.String);
-                    parameters.Add("@AscSort", filters.AscDirection, DbType.Boolean);
-                    
-                    var result =
-                        await connection.QueryAsync<EmployeeListItemDto>(StoredProcedures.GetEmployees,
-                            commandType: CommandType.StoredProcedure, param: parameters);
-                    return result.ToList();
+                    switch (filters.SortColumnName)
+                    {
+                        case "Department":
+                            return await result.OrderBy(e => e.Department.DepartmentName).ToListAsync();
+                        
+                        case "FullName":
+                            return await result.OrderBy(e => e.LastName)
+                                .ThenBy(e => e.FirstName)
+                                .ThenBy(e => e.FathersName)
+                                .ToListAsync();
+                        
+                        case "DateOfBirth":
+                            return await result.OrderBy(e => e.DateOfBirth).ToListAsync();
+                        
+                        case "DateOfEmployment":
+                            return await result.OrderBy(e => e.DateOfEmployment).ToListAsync();
+                        
+                        case "Salary":
+                            return await result.OrderBy(e => e.Salary).ToListAsync();
+                    }
                 }
+                else
+                {
+                    switch (filters.SortColumnName)
+                    {
+                        case "Department":
+                            return await result.OrderByDescending(e => e.Department.DepartmentName).ToListAsync();
+                        
+                        case "FullName":
+                            return await result.OrderByDescending(e => e.LastName)
+                                .ThenByDescending(e => e.FirstName)
+                                .ThenByDescending(e => e.FathersName)
+                                .ToListAsync();
+                        
+                        case "DateOfBirth":
+                            return await result.OrderByDescending(e => e.DateOfBirth).ToListAsync();
+                        
+                        case "DateOfEmployment":
+                            return await result.OrderByDescending(e => e.DateOfEmployment).ToListAsync();
+                        
+                        case "Salary":
+                            return await result.OrderByDescending(e => e.Salary).ToListAsync();
+                            
+                    }
+                }
+                return await result.ToListAsync();
             }
             catch (Exception e)
             {
@@ -52,15 +96,11 @@ namespace EmployeeTestApi.Data.Repositories.Implementations
         {
             try
             {
-                using (var connection = _context.CreateConnection())
-                {
-                    var parameters = new DynamicParameters();
-                    parameters.Add("@Id", id, DbType.Int32);
-                    var result =
-                        await connection.QuerySingleAsync<EmployeeRm>(StoredProcedures.GetEmployee,
-                            commandType: CommandType.StoredProcedure, param: parameters);
-                    return result;
-                }
+                var result = await _efContext.Employee
+                    .Include(e => e.Department)
+                    .FirstOrDefaultAsync(e => e.EmployeeId == id);
+                return result;
+                
             }
             catch (Exception e)
             {
@@ -73,22 +113,19 @@ namespace EmployeeTestApi.Data.Repositories.Implementations
         {
             try
             {
-                using (var connection = _context.CreateConnection())
-                {
-                    var parameters = new DynamicParameters();
-                    parameters.Add("@Id", model.EmployeeId, DbType.Int32);
-                    parameters.Add("@DepartmentId", model.DepartmentId, DbType.Int32);
-                    parameters.Add("@FirstName", model.FirstName, DbType.String);
-                    parameters.Add("@LastName", model.LastName, DbType.String);
-                    parameters.Add("@FathersName", model.FathersName, DbType.String);
-                    parameters.Add("@DateOfBirth", model.DateOfBirth, DbType.DateTime);
-                    parameters.Add("@DateOfEmployment", model.DateOfEmployment, DbType.DateTime);
-                    parameters.Add("@Salary", model.Salary, DbType.Decimal);
-                    
-                    await connection.ExecuteAsync(StoredProcedures.UpdateEmployee,
-                            commandType: CommandType.StoredProcedure, param: parameters);
-                    
-                }
+                var employee = await _efContext.Employee.FirstOrDefaultAsync(e => e.EmployeeId == model.EmployeeId);
+                if (employee == null) throw new NullReferenceException();
+
+                employee.FirstName = model.FirstName;
+                employee.LastName = model.LastName;
+                employee.FathersName = model.FathersName;
+                employee.Salary = model.Salary;
+                employee.DateOfBirth = model.DateOfBirth;
+                employee.DateOfEmployment = model.DateOfEmployment;
+                employee.DepartmentId = model.DepartmentId;
+
+                await _efContext.SaveChangesAsync();
+
             }
             catch (Exception e)
             {
@@ -103,13 +140,8 @@ namespace EmployeeTestApi.Data.Repositories.Implementations
         {
             try
             {
-                using (var connection = _context.CreateConnection())
-                {
-                    var result =
-                        await connection.QueryAsync<DepartmentRm>(StoredProcedures.GetDepartments,
-                            commandType: CommandType.StoredProcedure);
-                    return result.ToList();
-                }
+                var result = _efContext.Department.ToList();
+                return result.ToList();
             }
             catch (Exception e)
             {
@@ -122,21 +154,9 @@ namespace EmployeeTestApi.Data.Repositories.Implementations
         {
             try
             {
-                using (var connection = _context.CreateConnection())
-                {
-                    var parameters = new DynamicParameters();
-                    parameters.Add("@DepartmentId", model.DepartmentId, DbType.Int32);
-                    parameters.Add("@FirstName", model.FirstName, DbType.String);
-                    parameters.Add("@LastName", model.LastName, DbType.String);
-                    parameters.Add("@FathersName", model.FathersName, DbType.String);
-                    parameters.Add("@DateOfBirth", model.DateOfBirth, DbType.DateTime);
-                    parameters.Add("@DateOfEmployment", model.DateOfEmployment, DbType.DateTime);
-                    parameters.Add("@Salary", model.Salary, DbType.Decimal);
-                    
-                    await connection.ExecuteAsync(StoredProcedures.CreateEmployee,
-                        commandType: CommandType.StoredProcedure, param: parameters);
-                    
-                }
+                if (model == null) throw new NullReferenceException();
+                await _efContext.Employee.AddAsync(model);
+                await _efContext.SaveChangesAsync();
             }
             catch (Exception e)
             {
@@ -151,15 +171,11 @@ namespace EmployeeTestApi.Data.Repositories.Implementations
         {
             try
             {
-                using (var connection = _context.CreateConnection())
-                {
-                    var parameters = new DynamicParameters();
-                    parameters.Add("@Id", id, DbType.Int32);
-                    
-                    await connection.ExecuteAsync(StoredProcedures.DeleteEmployee,
-                        commandType: CommandType.StoredProcedure, param: parameters);
-                    
-                }
+                var employee = await _efContext.Employee.FirstOrDefaultAsync(e => e.EmployeeId == id);
+                if (employee == null) throw new Exception();
+
+                _efContext.Employee.Remove(employee);
+                await _efContext.SaveChangesAsync();
             }
             catch (Exception e)
             {

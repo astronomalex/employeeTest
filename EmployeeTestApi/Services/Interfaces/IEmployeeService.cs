@@ -8,7 +8,7 @@ namespace EmployeeTestApi.Services.Interfaces
     public interface IEmployeeService
     {
         Task<IEnumerable<EmployeeListItemDto>> GetList(EmployeesFilterModel filters);
-        Task<EmployeeRm> GetEditModel(int id);
+        Task<EmployeeSm> GetEditModel(int id);
         Task UpdateEmployee(EmployeeRm model);
         Task<IEnumerable<DepartmentRm>> GetDepartments();
         Task CreateEmployee(EmployeeRm model);

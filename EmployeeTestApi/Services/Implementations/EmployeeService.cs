@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using EmployeeTestApi.Data.Dtos;
 using EmployeeTestApi.Data.Models;
 using EmployeeTestApi.Data.Repositories.Interfaces;
@@ -12,16 +13,19 @@ namespace EmployeeTestApi.Services.Implementations
     public class EmployeeService: IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly IMapper _mapper;
 
-        public EmployeeService(IEmployeeRepository employeeRepository)
+        public EmployeeService(IEmployeeRepository employeeRepository, IMapper mapper)
         {
             _employeeRepository = employeeRepository;
+            _mapper = mapper;
         }
         public async Task<IEnumerable<EmployeeListItemDto>> GetList(EmployeesFilterModel filters)
         {
             try
             {
-                return await _employeeRepository.GetList(filters);
+                var result = await _employeeRepository.GetList(filters);
+                return _mapper.Map<IEnumerable<EmployeeListItemDto>>(result.ToList());
             }
             catch (Exception e)
             {
@@ -30,11 +34,14 @@ namespace EmployeeTestApi.Services.Implementations
             }
         }
 
-        public async Task<EmployeeRm> GetEditModel(int id)
+        public async Task<EmployeeSm> GetEditModel(int id)
         {
             try
             {
-                return await _employeeRepository.GetEditModel(id);
+                var result = await _employeeRepository.GetEditModel(id);
+                var mappedResult = _mapper.Map<EmployeeSm>(result);
+
+                return mappedResult;
             }
             catch (Exception e)
             {

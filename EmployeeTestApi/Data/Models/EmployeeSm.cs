@@ -1,12 +1,10 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 
 namespace EmployeeTestApi.Data.Models
 {
-    public class EmployeeRm
-    {   [Key]
+    public class EmployeeSm
+    {
         public int EmployeeId { get; set; }
-        public DepartmentRm Department { get; set; }
         
         public int DepartmentId { get; set; }
         public string FirstName { get; set; }

@@ -9,7 +9,7 @@ namespace EmployeeTestApi.Data.Repositories.Interfaces
     public interface IEmployeeRepository
     {
         Task UpdateEmployee(EmployeeRm model);
-        Task<IEnumerable<EmployeeListItemDto>> GetList(EmployeesFilterModel filters);
+        Task<IEnumerable<EmployeeRm>> GetList(EmployeesFilterModel filters);
         Task<EmployeeRm> GetEditModel(int id);
         Task<IEnumerable<DepartmentRm>> GetDepartments();
         Task CreateEmployee(EmployeeRm model);
