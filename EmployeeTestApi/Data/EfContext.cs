@@ -23,6 +23,7 @@ namespace EmployeeTestApi.Data
                 .WithMany(d => d.Employees)
                 .HasForeignKey(e => e.DepartmentId);
             modelBuilder.Entity<DepartmentRm>().HasKey(u => u.DepartmentId);
+            modelBuilder.Entity<EmployeeRm>().Property(e => e.Salary).HasColumnType("Decimal(18,2)");
         }
     }
 }

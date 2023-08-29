@@ -5,20 +5,25 @@ using System.Threading.Tasks;
 using EmployeeTestApi.Data.Models;
 using EmployeeTestApi.Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 
 namespace EmployeeTestApi.Data.Repositories.Implementations
 {
     public class EmployeeRepository: IEmployeeRepository
     {
         private readonly EfContext _efContext;
+        private readonly ILogger<EmployeeRepository> _logger;
 
-        public EmployeeRepository(EfContext efContext)
+        public EmployeeRepository(EfContext efContext, ILogger<EmployeeRepository> logger)
         {
             _efContext = efContext;
+            _logger = logger;
         }
         public async Task<IEnumerable<EmployeeRm>> GetList(EmployeesFilterModel filters)
         {
+            _logger.LogInformation($"GetList. Filters: {JsonConvert.SerializeObject(filters)}");
             try
             {
                 var result = _efContext.Employee
@@ -87,13 +92,14 @@ namespace EmployeeTestApi.Data.Repositories.Implementations
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.LogError($"GetList filters: {JsonConvert.SerializeObject(filters)} message: {e.Message}");
                 throw;
             }
         }
 
         public async Task<EmployeeRm> GetEditModel(int id)
         {
+            _logger.LogInformation($"GetEditModel. id: {id}");
             try
             {
                 var result = await _efContext.Employee
@@ -104,13 +110,14 @@ namespace EmployeeTestApi.Data.Repositories.Implementations
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.LogError($"GetEditModel id: {id} message: {e.Message}");
                 throw;
             }
         }
 
         public async Task UpdateEmployee(EmployeeRm model)
         {
+            _logger.LogInformation($"UpdateEmployee. Employee: {JsonConvert.SerializeObject(model)}");
             try
             {
                 var employee = await _efContext.Employee.FirstOrDefaultAsync(e => e.EmployeeId == model.EmployeeId);
@@ -129,7 +136,7 @@ namespace EmployeeTestApi.Data.Repositories.Implementations
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.LogError($"UpdateEmployee model: {JsonConvert.SerializeObject(model)} message: {e.Message}");
                 throw;
             }
             
@@ -145,13 +152,14 @@ namespace EmployeeTestApi.Data.Repositories.Implementations
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.LogError($"GetDepartments. message: {e.Message}");
                 throw;
             }
         }
         
         public async Task CreateEmployee(EmployeeRm model)
         {
+            _logger.LogInformation($"CreateEmployee. Employee: {JsonConvert.SerializeObject(model)}");
             try
             {
                 if (model == null) throw new NullReferenceException();
@@ -160,15 +168,14 @@ namespace EmployeeTestApi.Data.Repositories.Implementations
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.LogError($"CreateEmployee model: {JsonConvert.SerializeObject(model)} message: {e.Message}");
                 throw;
             }
-            
-            
         }
         
         public async Task DeleteEmployee(int id)
         {
+            _logger.LogInformation($"DeleteEmployee. id: {id}");
             try
             {
                 var employee = await _efContext.Employee.FirstOrDefaultAsync(e => e.EmployeeId == id);
@@ -179,7 +186,7 @@ namespace EmployeeTestApi.Data.Repositories.Implementations
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.LogError($"DeleteEmployee id: {id} message: {e.Message}");
                 throw;
             }
             
